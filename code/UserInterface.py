@@ -1,4 +1,5 @@
 from functools import reduce
+from tkinter import messagebox
 import PIL.ImageDraw
 import PIL.Image
 import Display
@@ -16,25 +17,24 @@ newCharacter = Factory.Entry(Factory.UI)
 entryMirror.insert(12,'N')
 
 def getstates(key):
-    main.chars[key] = [PIL.Image.new('RGB', (900,900), (255,255,255)), [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+    main.Characterset.chars[key] = [PIL.Image.new('RGB', (900,900), (255,255,255)), [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
     matrix1.getstates()
     matrix = matrix1.data
     for c, lists in enumerate(matrix):
-        main.chars[key][1][c+8] += reduce((lambda x,y: y+x), (list(int(math.pow(2,i)) if x == 1 else 0 for i, x in enumerate(lists))))
+        main.Characterset.chars[key][1][c+8] += reduce((lambda x,y: y+x), (list(int(math.pow(2,i)) if x == 1 else 0 for i, x in enumerate(lists))))
 
 def shownew():
     key = newCharacter.get()
     getstates(key)
     main.RadioVars.static.set(1)
-    Display.displayText(1, main.chars[key][1][8:16])
+    Display.displayText(1, main.Characterset.chars[key][1][8:16])
     main.RadioVars.static.set(0)
     
 #save new charsacter as png#    
 def savenew():
     key = newCharacter.get()
-    if not key in main.chars:
-        getstates(key)
-    draw = PIL.ImageDraw.Draw(main.chars[key][0])
+    getstates(key)
+    draw = PIL.ImageDraw.Draw(main.Characterset.chars[key][0])
     for i in range(0,9):
         x = i*100+50
         y = i*100+50
@@ -44,10 +44,13 @@ def savenew():
         x = xi * 100 + 50
         for yi in range(0,8):
             y = yi * 100 + 50
-            if (1 & main.chars[key][1][xi+8] >> yi) == 1 : color = 'black'
+            if (1 & main.Characterset.chars[key][1][xi+8] >> yi) == 1 : color = 'black'
             else: color = 'white'
             draw.rectangle([(x,y),(x+100, y+100)], fill = color, outline = 'black')
-    main.chars[key][0].save(key+".png")
+    try:
+        main.Characterset.chars[key][0].save(key+".png")
+    except ValueError:
+        messagebox.showerror('ERROR','Please type in a shortage of the characters name!')
 
 def createInterface(charset):
 #Headline#
@@ -62,16 +65,16 @@ def createInterface(charset):
     Builder('Label').build('', 2, 3)
 #text speed#
     Builder('Label').build('Text speed: ', 0, 4)
-    Builder('Radio').build('fast', 0, main.RadioVars.speed, 5, 1, 4)
-    Builder('Radio').build('normal', 0, main.RadioVars.speed, 10, 1, 5)
-    Builder('Radio').build('slow', 0, main.RadioVars.speed, 20, 1, 6)
+    Builder('Radio').build('fast', 0, main.RadioVars().speed, 5, 1, 4)
+    Builder('Radio').build('normal', 0, main.RadioVars().speed, 10, 1, 5)
+    Builder('Radio').build('slow', 0, main.RadioVars().speed, 20, 1, 6)
 #item box for text#
     Builder('Label').build('Mirror: ', 2, 1)
     Builder('Label').build('Text: ', 2, 2)
     Builder('Entry').build(entryMirror, 3, 1)
     Builder('Entry').build(entryText, 3, 2)
 
-    Builder('Button').build('Show', Display.getText(charset), 3, 6, fg = 'green')
+    Builder('Button').build('Show', lambda chars = charset: Display.getText(chars), 3, 6, fg = 'green')
 #Headline 2#
     Builder('Label').build('New character:',  4, 0, columnspan = 6, font = "16",)    
 #Create new charsacter#

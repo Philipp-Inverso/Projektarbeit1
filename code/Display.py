@@ -52,12 +52,38 @@ def displayText(static, data):
 def getText(charset):
     data = []
     args = []
-    letters = []
+    letters = []#letters.append(letter)
+    caution = False
+    string = False
     text = UserInterface.entryText.get()
     UserInterface.entryText.delete(0,'end')
     for letter in text:
         try:
-            args.append(charset[letter][1])
+            if not caution:
+                if letter == '<': caution = True
+                else: args.append(charset[letter][1])
+            elif caution:
+                if letter == '*':
+                    caution = False
+                    string = True
+                else:
+                    args.append(charset['<'][1])
+                    args.append(charset[letter][1])
+                    caution = False
+            while string:
+                if not caution:
+                    if letter == '*': caution = True
+                    else: letters.append(letter)
+                elif caution:
+                    if letter == '>':
+                        caution = False
+                        string = False
+                        args.append(charset[letters][1])
+                    else:
+                        letters.append('*')
+                        letters.append(letter)
+                        caution = False
+                
         except KeyError:
             messagebox.showwarning("Warning",letter+" is not included in the charsacterset")
             args = []
